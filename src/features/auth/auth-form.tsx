@@ -14,7 +14,7 @@ export default async function AuthForm({error}: {error?: string | string[] | nul
   }
 
   return (
-    <form className="mx-auto mt-16 flex w-full max-w-sm flex-col gap-4 rounded-lg border border-gray-200 bg-white p-8 shadow">
+    <form className="mx-auto mt-16 flex w-full max-w-sm flex-col gap-4 rounded-lg border p-8 shadow">
       <Label htmlFor="email">Email:</Label>
       <Input id="email" name="email" type="email" placeholder="example@test.com" required />
       <Label htmlFor="password">Password:</Label>

@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import React, { useImperativeHandle, useState, forwardRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { useTheme } from "next-themes";
+import MarkdownViewer from "../view/markdown-viewer";
 
 const Editor = dynamic(
   () => import("@monaco-editor/react").then((mod) => mod.Editor),
@@ -47,7 +49,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       if (!docUrl) return;
 
       const { error } = await supabase
-        .from("docs")
+        .from("documents")
         .update({ content: newContent })
         .eq("url", docUrl);
 
@@ -60,10 +62,10 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       if (!docUrl) return;
 
       const subscription = supabase
-        .channel("realtime:docs")
+        .channel("realtime:documents")
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "docs", filter: `url=eq.${docUrl}` },
+          { event: "UPDATE", schema: "public", table: "documents", filter: `url=eq.${docUrl}` },
           (payload) => {
             if (!isTyping && payload.new.content !== undefined) {
               setContent((prevContent) => {
@@ -83,14 +85,28 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
     }, [docUrl, isTyping]);
 
     return (
-      <Editor
-        height={height}
-        width={width}
-        defaultLanguage="markdown"
-        value={content}
-        onChange={handleEditorChange}
-        options={{ minimap: { enabled: true } }}
-      />
+      <div className="flex gap-4">
+        <Editor
+          height={height}
+          width={width}
+          defaultLanguage="markdown"
+          value={content}
+          onChange={handleEditorChange}
+          options={{
+            minimap: { enabled: false },
+            fontSize: 18,
+            wordWrap: "on",
+            wrappingIndent: "indent",
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            tabSize: 4,
+            cursorBlinking: "smooth",
+            cursorSmoothCaretAnimation: "on",
+          }}
+          theme={useTheme().resolvedTheme === "dark" ? "vs-dark" : "light"}
+        />
+        <MarkdownViewer content={content} />
+      </div>
     );
   }
 );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { createDoc } from "./createDoc";
+import { createDoc } from "./actions";
 
 export function DocSelector({ onSelect }: { onSelect: (docUrl: string) => void }) {
   const [docName, setDocName] = useState("");

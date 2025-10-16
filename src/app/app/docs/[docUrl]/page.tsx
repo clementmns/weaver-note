@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MarkdownEditor } from "@/features/editor/markdown-editor";
+import { MarkdownEditor } from "@/features/documents/editor/markdown-editor";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
@@ -25,7 +25,7 @@ export default function DocPage() {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from("docs")
+          .from("documents")
           .select("*")
           .eq("url", docUrl)
           .single();
@@ -41,7 +41,6 @@ export default function DocPage() {
 
     fetchDocData();
   }, [docUrl]);
-
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
