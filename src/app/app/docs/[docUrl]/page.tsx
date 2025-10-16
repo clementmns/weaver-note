@@ -5,9 +5,18 @@ import { MarkdownEditor } from "@/features/editor/markdown-editor";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
+interface Doc {
+  id: string;
+  name: string;
+  url: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function DocPage() {
   const { docUrl } = useParams() as { docUrl: string };
-  const [doc, setDoc] = useState<any>(null);
+  const [doc, setDoc] = useState<Doc | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
