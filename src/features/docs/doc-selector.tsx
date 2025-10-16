@@ -17,8 +17,12 @@ export function DocSelector({ onSelect }: { onSelect: (docUrl: string) => void }
     try {
       const doc = await createDoc(docName);
       onSelect(doc.url);
-    } catch (e: { message?: string } | any) {
-      setError(e.message || "Error creating doc");
+    } catch (e) {
+      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
+        setError((e as { message: string }).message);
+      } else {
+        setError("Error creating doc");
+      }
     } finally {
       setLoading(false);
     }
