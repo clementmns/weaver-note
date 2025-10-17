@@ -18,7 +18,6 @@ export async function createDoc(name: string) {
 
   if (error) throw error;
 
-  console.log("Created doc:", data);
   return data;
 }
 

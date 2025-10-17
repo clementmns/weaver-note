@@ -8,10 +8,12 @@ interface MarkdownViewerProps {
 }
 
 export default function MarkdownViewer({ content }: MarkdownViewerProps) {
+  const safeContent = typeof content === "string" ? content : "";
+
   return (
     <div className="w-full px-6 py-2">
       <MarkdownPreview
-        source={content}
+        source={safeContent}
         style={{
           backgroundColor: "transparent",
         }}
