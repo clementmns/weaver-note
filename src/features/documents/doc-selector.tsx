@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { createDoc } from "./actions";
 
-export function DocSelector({ onSelect }: { onSelect: (docUrl: string) => void }) {
+export function DocSelector({
+  onSelect,
+}: {
+  onSelect: (docUrl: string) => void;
+}) {
   const [docName, setDocName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +22,12 @@ export function DocSelector({ onSelect }: { onSelect: (docUrl: string) => void }
       const doc = await createDoc(docName);
       onSelect(doc.url);
     } catch (e) {
-      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
+      if (
+        typeof e === "object" &&
+        e !== null &&
+        "message" in e &&
+        typeof (e as { message?: string }).message === "string"
+      ) {
         setError((e as { message: string }).message);
       } else {
         setError("Error creating doc");
@@ -34,11 +43,15 @@ export function DocSelector({ onSelect }: { onSelect: (docUrl: string) => void }
       <Input
         placeholder="Document name..."
         value={docName}
-        onChange={e => setDocName(e.target.value)}
+        onChange={(e) => setDocName(e.target.value)}
         className="mb-2"
       />
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      <Button onClick={handleCreate} disabled={!docName || loading} className="w-full">
+      <Button
+        onClick={handleCreate}
+        disabled={!docName || loading}
+        className="w-full"
+      >
         {loading ? "Creating..." : "Create & Enter"}
       </Button>
     </Card>

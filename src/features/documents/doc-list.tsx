@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getDocs } from "./actions";
+import { Document } from "@/types/documents";
 
 export function DocList({ onSelect }: { onSelect: (docUrl: string) => void }) {
-  const [docs, setDocs] = useState<any[]>([]);
+  const [docs, setDocs] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

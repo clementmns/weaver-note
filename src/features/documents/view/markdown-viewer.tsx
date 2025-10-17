@@ -1,20 +1,16 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import Markdown from 'react-markdown';
+import React from "react";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
-const MarkdownViewer = ({ content }: { content: string }) => {
-  const [localContent, setLocalContent] = React.useState(content);
-  useEffect(() => {
-    setLocalContent(content);
-  }, [content]);
+interface MarkdownViewerProps {
+  content: string;
+}
 
-  console.log(content);
-
-
+const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content }) => {
   return (
-    <div className='w-full"'>
-      <Markdown>{localContent}</Markdown>
+    <div className="w-full px-6 py-2">
+      <MarkdownPreview source={content} />
     </div>
   );
 };

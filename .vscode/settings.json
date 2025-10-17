@@ -1,0 +1,8 @@
+{
+  "eslint.enable": true,
+  "eslint.options": {
+    "configFile": "eslint.config.mjs"
+  },
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2
+}

@@ -1,12 +1,24 @@
-import { Button } from "@/components/ui/button";
+"use client";
 
-export default function Home() {
+import { useRouter } from "next/navigation";
+import { DocSelector } from "@/features/documents/doc-selector";
+import { DocList } from "@/features/documents/doc-list";
+
+export default function HomePage() {
+  const router = useRouter();
+
+  const handleDocSelect = (docUrl: string) => {
+    if (docUrl) router.push(`/docs/${encodeURIComponent(docUrl)}`);
+  };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center">
-      <p className="text-lg mb-2">Welcome to the Collaborative Markdown Editor!</p>
-      <p className="text-sm mb-4">Please log in to continue.</p>
-      <a href="/auth/login"><Button size="lg">Go to Login</Button></a>
-    </div>
+    <main className="p-8">
+      <h1 className="text-2xl font-bold mb-6">Collaborative Markdown Editor</h1>
+      <p className="text-gray-600 mb-4">
+        Select or create a document to start editing together in real-time.
+      </p>
+      <DocSelector onSelect={handleDocSelect} />
+      <DocList onSelect={handleDocSelect} />
+    </main>
   );
 }
