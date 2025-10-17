@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
+import type { OnMount } from "@monaco-editor/react";
 
 const Editor = dynamic(
   () => import("@monaco-editor/react").then((mod) => mod.Editor),
@@ -18,16 +19,92 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   value = "",
   onChange,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorRef = useRef<any>(null);
+  const prevValueRef = useRef<string>(value);
+  const isUserEditingRef = useRef<boolean>(false);
+  const internalValueRef = useRef<string>(value);
+
+  const handleEditorDidMount: OnMount = (editor) => {
+    editorRef.current = editor;
+
+    if (editor.getValue() !== value) {
+      editor.setValue(value);
+    }
+
+    editor.onDidChangeModelContent((e) => {
+      isUserEditingRef.current = true;
+
+      internalValueRef.current = editor.getValue();
+
+      setTimeout(() => {
+        isUserEditingRef.current = false;
+      }, 100);
+
+      if (onChange && e.changes.length > 0) {
+        onChange(internalValueRef.current);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    if (internalValueRef.current === value) {
+      return;
+    }
+
+    if (prevValueRef.current !== value && !isUserEditingRef.current) {
+      const currentPosition = editorRef.current.getPosition();
+
+      if (currentPosition) {
+        const prevCursorOffset =
+          editorRef.current.getModel()?.getOffsetAt(currentPosition) || 0;
+
+        try {
+          const model = editorRef.current.getModel();
+          if (model) {
+            model.setValue(value);
+            internalValueRef.current = value;
+
+            const newPosition = model.getPositionAt(
+              Math.min(prevCursorOffset, value.length),
+            );
+            editorRef.current.setPosition(newPosition);
+            editorRef.current.revealPositionInCenter(newPosition);
+          }
+        } catch (err) {
+          console.error(
+            "Error updating content and restoring cursor position:",
+            err,
+          );
+        }
+      } else {
+        try {
+          editorRef.current.setValue(value);
+          internalValueRef.current = value;
+        } catch (err) {
+          console.error("Error updating content:", err);
+        }
+      }
+    }
+
+    prevValueRef.current = value;
+  }, [value]);
+
   return (
     <Editor
       height="100%"
       width="100%"
       defaultLanguage="markdown"
-      value={value}
-      onChange={onChange}
+      defaultValue={value}
+      onMount={handleEditorDidMount}
       options={{
         minimap: { enabled: false },
         fontSize: 18,
+        suggestOnTriggerCharacters: false,
+        quickSuggestions: false,
+        acceptSuggestionOnEnter: "off",
         wrappingIndent: "indent",
         scrollBeyondLastLine: true,
         automaticLayout: true,

@@ -90,7 +90,6 @@ class ChannelService {
 
     channel.on("presence", { event: "sync" }, () => {
       const state: PresenceState = channel.presenceState();
-      console.log("Presence state:", state);
 
       const allPresences = Object.values(state) as PresenceEntry[][];
       const flat = allPresences.flat?.() ?? ([] as PresenceEntry[]);

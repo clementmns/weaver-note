@@ -55,8 +55,14 @@ export default function MarkdownWindow({
   const handleEditorChange = useCallback(
     (value: string | undefined) => {
       const next = value || "";
-      setContent(next);
-      contentRef.current = next;
+
+      if (contentRef.current !== next) {
+        contentRef.current = next;
+
+        if (viewMode === "both" || viewMode === "view") {
+          setContent(next);
+        }
+      }
 
       if (!docUrl) return;
       if (debounceTimer.current) window.clearTimeout(debounceTimer.current);
@@ -94,7 +100,7 @@ export default function MarkdownWindow({
         }
       }, 300);
     },
-    [docUrl, setSaveStatus],
+    [docUrl, setSaveStatus, viewMode],
   );
 
   useEffect(() => {
@@ -112,7 +118,7 @@ export default function MarkdownWindow({
 
       channelRef.current = channel;
 
-      await subscribeToPresence(channel, (connectedUsers) => {
+      subscribeToPresence(channel, (connectedUsers) => {
         if (!mounted) return;
         setConnectedUsers?.(connectedUsers);
       });
@@ -150,8 +156,10 @@ export default function MarkdownWindow({
                 return;
               }
 
-              setContent(payload.content);
-              contentRef.current = payload.content;
+              if (contentRef.current !== payload.content) {
+                setContent(payload.content);
+                contentRef.current = payload.content;
+              }
             }
           } catch {
             console.error("Error handling doc:update payload");
@@ -181,7 +189,11 @@ export default function MarkdownWindow({
     <div className="flex gap-4 flex-1 max-h-[88vh]">
       {(viewMode === "edit" || viewMode === "both") && (
         <div className="w-full border rounded-lg overflow-hidden">
-          <MarkdownEditor value={content} onChange={handleEditorChange} />
+          <MarkdownEditor
+            value={contentRef.current || ""}
+            onChange={handleEditorChange}
+            docUrl={docUrl}
+          />
         </div>
       )}
       {(viewMode === "view" || viewMode === "both") && (
