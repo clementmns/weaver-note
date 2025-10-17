@@ -28,8 +28,6 @@ export type DocUpdatePayload = {
 };
 
 export interface RealtimeChannel {
-  // "on" is used with presence events in this file. Provide overloads for
-  // the specific presence event shapes we use.
   on(
     eventSource: "presence",
     opts: { event: "sync" },
@@ -46,7 +44,6 @@ export interface RealtimeChannel {
     callback: (payload: { payload?: DocUpdatePayload }) => void,
   ): RealtimeChannel;
 
-  // Methods used below
   presenceState(): PresenceState;
   subscribe(): void;
   send(message: { type: string; event?: string; payload?: unknown }): void;

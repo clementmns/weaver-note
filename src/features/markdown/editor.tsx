@@ -1,14 +1,9 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import dynamic from "next/dynamic";
 import type { OnMount } from "@monaco-editor/react";
 import { debounce } from "lodash";
-
-const Editor = dynamic(
-  () => import("@monaco-editor/react").then((mod) => mod.Editor),
-  { ssr: false },
-);
+import { Editor } from "@monaco-editor/react";
 
 interface MarkdownEditorProps {
   value?: string;
@@ -16,10 +11,10 @@ interface MarkdownEditorProps {
   docUrl?: string;
 }
 
-const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
+export default function MarkdownEditor({
   value = "",
   onChange,
-}) => {
+}: MarkdownEditorProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
   const prevValueRef = useRef<string>(value);
@@ -122,6 +117,4 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       }}
     />
   );
-};
-
-export default MarkdownEditor;
+}

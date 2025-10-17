@@ -1,17 +1,8 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { DocSelector } from "@/features/documents/doc-selector";
+import { DocumentCreateForm } from "@/features/documents/create-form";
 import Footer from "@/components/layouts/footer";
 import Background from "@/components/ui/background";
 
 export default function HomePage() {
-  const router = useRouter();
-
-  const handleDocSelect = (docUrl: string) => {
-    if (docUrl) router.push(`/docs/${encodeURIComponent(docUrl)}`);
-  };
-
   return (
     <main className="p-8">
       <Background />
@@ -21,7 +12,7 @@ export default function HomePage() {
           Create a document to begin your journey.
         </p>
         <div className="max-w-md mx-auto">
-          <DocSelector onSelect={handleDocSelect} />
+          <DocumentCreateForm />
           <Footer />
         </div>
       </section>

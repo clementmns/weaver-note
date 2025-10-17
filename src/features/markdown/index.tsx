@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import MarkdownViewer from "./view/markdown-viewer";
-import MarkdownEditor from "./editor/markdown-editor";
+import MarkdownViewer from "./viewer";
+import MarkdownEditor from "./editor";
 import {
   createPresenceChannel,
   subscribeToPresence,
@@ -10,27 +10,26 @@ import {
   closeChannel,
 } from "@/lib/channel/documents";
 import { supabase } from "@/lib/supabase/client";
-import { Button } from "../../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, getGuestId } from "@/lib/utils";
+import { SaveStatus, ViewMode } from "@/types/global";
 
-interface MarkdownWindowProps {
+interface MarkdownProps {
   defaultValue: string;
   docUrl?: string;
-  viewMode?: "edit" | "view" | "both";
+  viewMode?: ViewMode;
   setConnectedUsers?: React.Dispatch<React.SetStateAction<number>>;
-  setSaveStatus?: React.Dispatch<
-    React.SetStateAction<"idle" | "saving" | "saved" | "error">
-  >;
+  setSaveStatus?: React.Dispatch<React.SetStateAction<SaveStatus>>;
 }
 
-export default function MarkdownWindow({
+export default function Markdown({
   defaultValue,
   docUrl,
-  viewMode = "both",
+  viewMode = ViewMode.BOTH,
   setConnectedUsers,
   setSaveStatus,
-}: MarkdownWindowProps) {
+}: MarkdownProps) {
   const [content, setContent] = useState(defaultValue);
   const channelRef = useRef<
     import("@/lib/channel/documents").RealtimeChannel | null
@@ -39,21 +38,6 @@ export default function MarkdownWindow({
   const contentRef = useRef<string | undefined>(defaultValue);
   const initialGraceRef = useRef(true);
 
-  const getGuestId = useCallback(() => {
-    try {
-      const key = "weave_guest_id";
-      let id = sessionStorage.getItem(key);
-      if (!id) {
-        id = `guest_${Math.random().toString(36).slice(2, 10)}`;
-        sessionStorage.setItem(key, id);
-      }
-      return id;
-    } catch (_err: unknown) {
-      console.error(_err);
-      return `guest_${Math.random().toString(36).slice(2, 10)}`;
-    }
-  }, []);
-
   const handleEditorChange = useCallback(
     async (value: string | undefined) => {
       const next = value || "";
@@ -61,14 +45,13 @@ export default function MarkdownWindow({
       if (contentRef.current !== next) {
         contentRef.current = next;
 
-        if (viewMode === "both" || viewMode === "view") {
+        if (viewMode === ViewMode.BOTH || viewMode === ViewMode.VIEW) {
           setContent(next);
         }
       }
 
       if (!docUrl) return;
 
-      // Broadcast update immediately without debouncing
       if (channelRef.current) {
         broadcastDocUpdate(channelRef.current, {
           type: "content",
@@ -81,7 +64,7 @@ export default function MarkdownWindow({
       try {
         if (lastSavedRef.current === next) return;
 
-        setSaveStatus?.("saving");
+        setSaveStatus?.(SaveStatus.SAVING);
 
         const { error } = await supabase
           .from("documents")
@@ -90,14 +73,14 @@ export default function MarkdownWindow({
 
         if (error) {
           console.error("Failed to save document:", error);
-          setSaveStatus?.("error");
+          setSaveStatus?.(SaveStatus.ERROR);
         } else {
           lastSavedRef.current = next;
-          setSaveStatus?.("saved");
+          setSaveStatus?.(SaveStatus.SAVED);
         }
       } catch (err) {
         console.error("Autosave error:", err);
-        setSaveStatus?.("error");
+        setSaveStatus?.(SaveStatus.ERROR);
       }
     },
     [docUrl, setSaveStatus, viewMode],
@@ -186,7 +169,7 @@ export default function MarkdownWindow({
 
   return (
     <div className="flex gap-4 flex-1 max-h-[88vh]">
-      {(viewMode === "edit" || viewMode === "both") && (
+      {(viewMode === ViewMode.EDIT || viewMode === ViewMode.BOTH) && (
         <div className="w-full border rounded-lg overflow-hidden bg-background">
           <div className="relative">
             <div
@@ -214,7 +197,7 @@ export default function MarkdownWindow({
           />
         </div>
       )}
-      {(viewMode === "view" || viewMode === "both") && (
+      {(viewMode === ViewMode.VIEW || viewMode === ViewMode.BOTH) && (
         <div className="w-full border rounded-lg overflow-auto bg-background dark:bg-[#1e1e1e]">
           <MarkdownViewer content={content} />
         </div>

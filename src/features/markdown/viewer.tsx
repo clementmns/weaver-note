@@ -7,7 +7,7 @@ interface MarkdownViewerProps {
   content: string;
 }
 
-const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content }) => {
+export default function MarkdownViewer({ content }: MarkdownViewerProps) {
   return (
     <div className="w-full px-6 py-2">
       <MarkdownPreview
@@ -23,6 +23,4 @@ const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content }) => {
       `}</style>
     </div>
   );
-};
-
-export default MarkdownViewer;
+}

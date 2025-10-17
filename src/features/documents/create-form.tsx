@@ -5,34 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { createDoc } from "./actions";
+import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export function DocSelector({
-  onSelect,
-}: {
-  onSelect: (docUrl: string) => void;
-}) {
+export function DocumentCreateForm() {
   const [docName, setDocName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleCreate = async () => {
     setLoading(true);
     setError("");
     try {
       const doc = await createDoc(docName);
-      onSelect(doc.url);
-    } catch (e) {
-      if (
-        typeof e === "object" &&
-        e !== null &&
-        "message" in e &&
-        typeof (e as { message?: string }).message === "string"
-      ) {
-        setError((e as { message: string }).message);
-      } else {
-        setError("Error creating doc");
-      }
-    } finally {
+      router.push(`/docs/${encodeURIComponent(doc.url)}`);
+    } catch {
+      setError("Error creating document");
       setLoading(false);
     }
   };
@@ -53,8 +42,19 @@ export function DocSelector({
           className="mb-2"
         />
         {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-        <Button type="submit" disabled={!docName || loading} className="w-full">
-          {loading ? "Creating..." : "Create & Enter"}
+        <Button
+          type="submit"
+          disabled={!docName || loading}
+          className="w-full flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <LoaderCircle className="animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create & Enter"
+          )}
         </Button>
       </form>
     </Card>

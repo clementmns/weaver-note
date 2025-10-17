@@ -32,3 +32,15 @@ export async function getDocs() {
 
   return data;
 }
+
+export async function getDoc(docUrl: string) {
+  const { data, error } = await supabase
+    .from("documents")
+    .select("*")
+    .eq("url", docUrl)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}

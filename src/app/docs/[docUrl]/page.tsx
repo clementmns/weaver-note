@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { redirect, useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Columns2,
@@ -16,67 +15,53 @@ import {
   Link as LinkIcon,
   LoaderCircle,
 } from "lucide-react";
-import MarkdownWindow from "@/features/documents/markdown-window";
+import Markdown from "@/features/markdown";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { copyToClipboard } from "@/lib/utils";
 import Background from "@/components/ui/background";
-
-interface Doc {
-  id: string;
-  name: string;
-  url: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-}
+import { SaveStatus, ViewMode } from "@/types/global";
+import { Document } from "@/types/document";
+import { getDoc } from "@/features/documents/actions";
 
 export default function DocPage() {
   const { docUrl } = useParams() as { docUrl: string };
-  const [doc, setDoc] = useState<Doc | null>(null);
+  const [doc, setDoc] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [viewMode, setViewMode] = useState<"edit" | "view" | "both">("both");
+  const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.BOTH);
+  const [connectedUsers, setConnectedUsers] = useState<number>(1);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.IDLE);
+
+  const fetchDocData = async () => {
+    try {
+      setLoading(true);
+      const data = await getDoc(docUrl);
+      if (!data) throw new Error("Document not found");
+      setDoc(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err as Error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDocData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("documents")
-          .select("*")
-          .eq("url", docUrl)
-          .single();
-
-        if (error) throw error;
-        setDoc(data);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDocData();
   }, [docUrl]);
 
-  const [connectedUsers, setConnectedUsers] = useState<number>(1);
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-
   useEffect(() => {
     let t: number | undefined;
-    if (saveStatus === "saved") {
-      t = window.setTimeout(() => setSaveStatus("idle"), 3000);
+    if (saveStatus === SaveStatus.SAVED) {
+      t = window.setTimeout(() => setSaveStatus(SaveStatus.IDLE), 3000);
     }
     return () => {
       if (t) window.clearTimeout(t);
     };
   }, [saveStatus]);
 
-  if (loading)
+  if (loading) {
     return (
       <main className="p-8 min-h-screen flex flex-col">
         <Background />
@@ -88,7 +73,9 @@ export default function DocPage() {
         </div>
       </main>
     );
-  if (error) redirect("/");
+  }
+
+  if (error || !doc) redirect("/");
 
   return (
     <main className="p-8 min-h-screen flex flex-col">
@@ -118,42 +105,34 @@ export default function DocPage() {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {saveStatus === "saving" && (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />
-                </>
+                <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />
               )}
               {saveStatus === "saved" && (
-                <>
-                  <CircleCheck className="h-4 w-4 " aria-hidden />
-                </>
+                <CircleCheck className="h-4 w-4 " aria-hidden />
               )}
               {saveStatus === "error" && (
-                <>
-                  <AlertCircle className="h-4 w-4 text-red-500" aria-hidden />
-                </>
+                <AlertCircle className="h-4 w-4 text-red-500" aria-hidden />
               )}
             </div>
-            <Button variant="ghost" className="px-2" disabled>
+            <Button variant="ghost" className="px-2" disabled aria-hidden>
               <span className="text-sm">{connectedUsers}</span>
               <Users className="h-6" />
             </Button>
           </div>
           <Tabs
             defaultValue={viewMode}
-            onValueChange={(value) =>
-              setViewMode(value as "edit" | "view" | "both")
-            }
+            onValueChange={(value: string) => setViewMode(value as ViewMode)}
           >
             <TabsList>
-              <TabsTrigger value="both">
+              <TabsTrigger value={ViewMode.BOTH}>
                 <Columns2 />
                 Both
               </TabsTrigger>
-              <TabsTrigger value="edit">
+              <TabsTrigger value={ViewMode.EDIT}>
                 <Pencil />
                 Edit
               </TabsTrigger>
-              <TabsTrigger value="view">
+              <TabsTrigger value={ViewMode.VIEW}>
                 <Eye />
                 View
               </TabsTrigger>
@@ -162,7 +141,7 @@ export default function DocPage() {
         </div>
       </div>
       {doc && (
-        <MarkdownWindow
+        <Markdown
           defaultValue={doc.content ?? ""}
           docUrl={docUrl}
           viewMode={viewMode}
