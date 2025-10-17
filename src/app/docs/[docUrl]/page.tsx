@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { redirect, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,12 +14,13 @@ import {
   CircleCheck,
   ChevronLeft,
   Link as LinkIcon,
+  LoaderCircle,
 } from "lucide-react";
 import MarkdownWindow from "@/features/documents/markdown-window";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { copyToClipboard } from "@/lib/utils";
-import Background from "../../../components/ui/background";
+import Background from "@/components/ui/background";
 
 interface Doc {
   id: string;
@@ -75,8 +76,19 @@ export default function DocPage() {
     };
   }, [saveStatus]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  if (loading)
+    return (
+      <main className="p-8 min-h-screen flex flex-col">
+        <Background />
+        <div className="flex justify-center items-center flex-grow">
+          <LoaderCircle
+            className="h-8 w-8 animate-spin text-muted-foreground"
+            aria-hidden
+          />
+        </div>
+      </main>
+    );
+  if (error) redirect("/");
 
   return (
     <main className="p-8 min-h-screen flex flex-col">

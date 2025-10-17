@@ -3,6 +3,7 @@
 import React, { useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { OnMount } from "@monaco-editor/react";
+import { debounce } from "lodash";
 
 const Editor = dynamic(
   () => import("@monaco-editor/react").then((mod) => mod.Editor),
@@ -25,6 +26,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const isUserEditingRef = useRef<boolean>(false);
   const internalValueRef = useRef<string>(value);
 
+  const debouncedOnChange = useRef(
+    debounce((newValue: string | undefined) => {
+      if (onChange) {
+        onChange(newValue);
+      }
+    }, 300),
+  ).current;
+
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
 
@@ -41,8 +50,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         isUserEditingRef.current = false;
       }, 100);
 
-      if (onChange && e.changes.length > 0) {
-        onChange(internalValueRef.current);
+      if (e.changes.length > 0) {
+        debouncedOnChange(internalValueRef.current);
       }
     });
   };

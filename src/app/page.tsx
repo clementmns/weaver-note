@@ -4,10 +4,6 @@ import { useRouter } from "next/navigation";
 import { DocSelector } from "@/features/documents/doc-selector";
 import Footer from "@/components/layouts/footer";
 import Background from "@/components/ui/background";
-import { Button } from "@/components/ui/button";
-import { FaGithub } from "react-icons/fa";
-import { FaLinkedin } from "react-icons/fa";
-import Link from "next/link";
 
 export default function HomePage() {
   const router = useRouter();

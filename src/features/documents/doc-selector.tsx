@@ -40,20 +40,23 @@ export function DocSelector({
   return (
     <Card className="p-6 mb-6">
       <h2 className="text-lg font-semibold mb-2">Create a Document</h2>
-      <Input
-        placeholder="Document name..."
-        value={docName}
-        onChange={(e) => setDocName(e.target.value)}
-        className="mb-2"
-      />
-      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      <Button
-        onClick={handleCreate}
-        disabled={!docName || loading}
-        className="w-full"
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await handleCreate();
+        }}
       >
-        {loading ? "Creating..." : "Create & Enter"}
-      </Button>
+        <Input
+          placeholder="Document name..."
+          value={docName}
+          onChange={(e) => setDocName(e.target.value)}
+          className="mb-2"
+        />
+        {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+        <Button type="submit" disabled={!docName || loading} className="w-full">
+          {loading ? "Creating..." : "Create & Enter"}
+        </Button>
+      </form>
     </Card>
   );
 }
