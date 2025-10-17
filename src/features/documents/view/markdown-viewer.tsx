@@ -10,7 +10,17 @@ interface MarkdownViewerProps {
 const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content }) => {
   return (
     <div className="w-full px-6 py-2">
-      <MarkdownPreview source={content} />
+      <MarkdownPreview
+        source={content}
+        style={{
+          backgroundColor: "transparent",
+        }}
+      />
+      <style jsx global>{`
+        .wmde-markdown img {
+          background-color: transparent !important;
+        }
+      `}</style>
     </div>
   );
 };

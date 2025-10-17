@@ -110,8 +110,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         automaticLayout: true,
         wordWrap: "on",
         tabSize: 4,
-        cursorBlinking: "smooth",
-        cursorSmoothCaretAnimation: "on",
       }}
     />
   );

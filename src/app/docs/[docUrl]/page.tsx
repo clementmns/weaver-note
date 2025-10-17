@@ -12,9 +12,14 @@ import {
   RefreshCw,
   AlertCircle,
   CircleCheck,
+  ChevronLeft,
+  Link as LinkIcon,
 } from "lucide-react";
 import MarkdownWindow from "@/features/documents/markdown-window";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { copyToClipboard } from "@/lib/utils";
+import Background from "../../../components/ui/background";
 
 interface Doc {
   id: string;
@@ -75,11 +80,29 @@ export default function DocPage() {
 
   return (
     <main className="p-8 min-h-screen flex flex-col">
+      <Background />
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold relative after:absolute after:left-0 after:bottom-0 after:w-full after:h-1 after:bg-primary after:content-['']">
-          {doc?.name}
-        </h1>
-        <div className="flex">
+        <div className="flex items-center gap-2 justify-center">
+          <Link href="/">
+            <ChevronLeft />
+          </Link>
+          <h1 className="text-2xl font-bold relative after:absolute after:left-0 after:bottom-0 after:w-full after:h-1 after:bg-primary after:content-['']">
+            {doc?.name}
+          </h1>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() =>
+              copyToClipboard(
+                `${window.location.origin}/docs/${docUrl}`,
+                "Document link copied to clipboard",
+              )
+            }
+          >
+            <LinkIcon className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {saveStatus === "saving" && (

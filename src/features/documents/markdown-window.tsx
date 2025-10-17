@@ -10,6 +10,9 @@ import {
   closeChannel,
 } from "@/lib/channel/documents";
 import { supabase } from "@/lib/supabase/client";
+import { Button } from "../../components/ui/button";
+import { Copy } from "lucide-react";
+import { copyToClipboard } from "@/lib/utils";
 
 interface MarkdownWindowProps {
   defaultValue: string;
@@ -32,7 +35,6 @@ export default function MarkdownWindow({
   const channelRef = useRef<
     import("@/lib/channel/documents").RealtimeChannel | null
   >(null);
-  const debounceTimer = useRef<number | null>(null);
   const lastSavedRef = useRef<string>(defaultValue ?? "");
   const contentRef = useRef<string | undefined>(defaultValue);
   const initialGraceRef = useRef(true);
@@ -53,7 +55,7 @@ export default function MarkdownWindow({
   }, []);
 
   const handleEditorChange = useCallback(
-    (value: string | undefined) => {
+    async (value: string | undefined) => {
       const next = value || "";
 
       if (contentRef.current !== next) {
@@ -65,40 +67,38 @@ export default function MarkdownWindow({
       }
 
       if (!docUrl) return;
-      if (debounceTimer.current) window.clearTimeout(debounceTimer.current);
 
-      debounceTimer.current = window.setTimeout(async () => {
-        if (channelRef.current) {
-          broadcastDocUpdate(channelRef.current, {
-            type: "content",
-            content: next,
-            meta: { docUrl },
-          });
-        }
+      // Broadcast update immediately without debouncing
+      if (channelRef.current) {
+        broadcastDocUpdate(channelRef.current, {
+          type: "content",
+          content: next,
+          meta: { docUrl },
+        });
+      }
 
-        if (!docUrl) return;
-        try {
-          if (lastSavedRef.current === next) return;
+      // Save to database immediately
+      try {
+        if (lastSavedRef.current === next) return;
 
-          setSaveStatus?.("saving");
+        setSaveStatus?.("saving");
 
-          const { error } = await supabase
-            .from("documents")
-            .update({ content: next, updated_at: new Date().toISOString() })
-            .eq("url", docUrl);
+        const { error } = await supabase
+          .from("documents")
+          .update({ content: next, updated_at: new Date().toISOString() })
+          .eq("url", docUrl);
 
-          if (error) {
-            console.error("Failed to save document:", error);
-            setSaveStatus?.("error");
-          } else {
-            lastSavedRef.current = next;
-            setSaveStatus?.("saved");
-          }
-        } catch (err) {
-          console.error("Autosave error:", err);
+        if (error) {
+          console.error("Failed to save document:", error);
           setSaveStatus?.("error");
+        } else {
+          lastSavedRef.current = next;
+          setSaveStatus?.("saved");
         }
-      }, 300);
+      } catch (err) {
+        console.error("Autosave error:", err);
+        setSaveStatus?.("error");
+      }
     },
     [docUrl, setSaveStatus, viewMode],
   );
@@ -174,7 +174,6 @@ export default function MarkdownWindow({
 
     return () => {
       mounted = false;
-      if (debounceTimer.current) window.clearTimeout(debounceTimer.current);
       if (channelRef.current) {
         try {
           closeChannel(channelRef.current);
@@ -188,7 +187,26 @@ export default function MarkdownWindow({
   return (
     <div className="flex gap-4 flex-1 max-h-[88vh]">
       {(viewMode === "edit" || viewMode === "both") && (
-        <div className="w-full border rounded-lg overflow-hidden">
+        <div className="w-full border rounded-lg overflow-hidden bg-background">
+          <div className="relative">
+            <div
+              className="absolute top-2 right-2 z-50"
+              style={{ top: "10px", right: "10px", pointerEvents: "auto" }}
+            >
+              <Button
+                variant={"outline"}
+                size={"icon-lg"}
+                onClick={() =>
+                  copyToClipboard(
+                    content,
+                    "Markdown content copied to clipboard",
+                  )
+                }
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           <MarkdownEditor
             value={contentRef.current || ""}
             onChange={handleEditorChange}
@@ -197,7 +215,7 @@ export default function MarkdownWindow({
         </div>
       )}
       {(viewMode === "view" || viewMode === "both") && (
-        <div className="w-full border rounded-lg overflow-auto">
+        <div className="w-full border rounded-lg overflow-auto bg-background dark:bg-[#1e1e1e]">
           <MarkdownViewer content={content} />
         </div>
       )}

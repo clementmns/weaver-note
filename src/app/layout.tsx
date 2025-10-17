@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Weaver Note",
+  title: "Weave Note",
   description: "Collaborative markdown editor",
 };
 
@@ -29,6 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased *:selection:bg-primary min-h-screen`}
       >
         <ThemeProvider attribute="class" defaultTheme="system">
+          <Toaster />
           {children}
         </ThemeProvider>
       </body>

@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { DocSelector } from "@/features/documents/doc-selector";
-import { DocList } from "@/features/documents/doc-list";
+import Footer from "@/components/layouts/footer";
+import Background from "@/components/ui/background";
+import { Button } from "@/components/ui/button";
+import { FaGithub } from "react-icons/fa";
+import { FaLinkedin } from "react-icons/fa";
+import Link from "next/link";
 
 export default function HomePage() {
   const router = useRouter();
@@ -13,12 +18,17 @@ export default function HomePage() {
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Collaborative Markdown Editor</h1>
-      <p className="text-gray-600 mb-4">
-        Select or create a document to start editing together in real-time.
-      </p>
-      <DocSelector onSelect={handleDocSelect} />
-      <DocList onSelect={handleDocSelect} />
+      <Background />
+      <section id="doc-selector" className="py-12 mt-16">
+        <h2 className="text-2xl font-bold text-center mb-6">WeaveNote</h2>
+        <p className="text-center text-muted-foreground mb-4">
+          Create a document to begin your journey.
+        </p>
+        <div className="max-w-md mx-auto">
+          <DocSelector onSelect={handleDocSelect} />
+          <Footer />
+        </div>
+      </section>
     </main>
   );
 }
