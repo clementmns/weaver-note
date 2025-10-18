@@ -128,11 +128,7 @@ export default class SupabaseProvider extends EventEmitter {
       .eq(this.config.idName || "id", this.config.id)
       .single();
 
-    console.log(
-      "retrieved data from supabase",
-      status,
-      data?.[this.config.columnName],
-    );
+    this.logger(`fetched initial document state with status ${status}`);
 
     if (data && data[this.config.columnName]) {
       this.logger("applying update to yjs");

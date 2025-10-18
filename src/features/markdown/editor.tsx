@@ -22,8 +22,10 @@ if (typeof window !== "undefined" && !window.MonacoEnvironment) {
 
 export default function MarkdownEditor({
   documentURL,
+  onContentChange,
 }: {
   documentURL: string;
+  onContentChange?: (content: string) => void;
 }) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,7 +83,12 @@ export default function MarkdownEditor({
           columnName: "content",
           id: documentURL,
           idName: "url",
-          resyncInterval: false,
+        });
+
+        model.onDidChangeContent(() => {
+          if (onContentChange) {
+            onContentChange(model.getValue());
+          }
         });
       }
     });
@@ -90,7 +97,7 @@ export default function MarkdownEditor({
       monacoInstance.current?.dispose();
       ydoc.current?.destroy();
     };
-  }, [documentURL, resolvedTheme]);
+  }, [documentURL, resolvedTheme, onContentChange]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -148,7 +155,7 @@ export default function MarkdownEditor({
       <div className="absolute bottom-4 right-4 z-10">
         <Button onClick={copyEditorContent}>
           <Copy />
-          Copy Content
+          <span className="sm:block hidden">Copy Content</span>
         </Button>
       </div>
       <Dialog
@@ -159,7 +166,7 @@ export default function MarkdownEditor({
           <div className="absolute bottom-4 left-4 z-10">
             <Button>
               <BookDashed />
-              Use Template
+              <span className="sm:block hidden">Use Template</span>
             </Button>
           </div>
         </DialogTrigger>
