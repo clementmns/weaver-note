@@ -1,11 +1,12 @@
 import debug from "debug";
 import { EventEmitter } from "events";
-import * as Y from "yjs";
+import Y from "@/lib/yjs";
 import * as awarenessProtocol from "y-protocols/awareness";
-
+import { int4ToUint8Array } from "@/lib/utils";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { REALTIME_LISTEN_TYPES } from "@supabase/supabase-js";
+
 export interface SupabaseProviderConfig {
   channel: string;
   tableName: string;
@@ -14,6 +15,7 @@ export interface SupabaseProviderConfig {
   id: string | number;
   awareness?: awarenessProtocol.Awareness;
   resyncInterval?: number | false;
+  batchInterval?: number | false;
 }
 
 export default class SupabaseProvider extends EventEmitter {
@@ -23,10 +25,12 @@ export default class SupabaseProvider extends EventEmitter {
 
   private _synced: boolean = false;
   private resyncInterval: NodeJS.Timeout | undefined;
+  private batchTimeout: NodeJS.Timeout | undefined;
   protected logger: debug.Debugger;
   public readonly id: number;
 
   public version: number = 0;
+  private messageQueue: Uint8Array[] = [];
 
   isOnline(online?: boolean): boolean {
     if (!online && online !== false) return this.connected;
@@ -49,7 +53,7 @@ export default class SupabaseProvider extends EventEmitter {
         clearTimeout(this._debounceTimeout);
         this._debounceTimeout = setTimeout(() => {
           this.save();
-        }, 2000);
+        }, 1000);
       }
     }
   }
@@ -120,18 +124,28 @@ export default class SupabaseProvider extends EventEmitter {
 
     const { data, status } = await this.supabase
       .from(this.config.tableName)
-      .select<string, { [key: string]: number[] }>(`${this.config.columnName}`)
+      .select<string, Record<string, unknown>>(`${this.config.columnName}`)
       .eq(this.config.idName || "id", this.config.id)
       .single();
 
-    this.logger("retrieved data from supabase", status);
+    console.log(
+      "retrieved data from supabase",
+      status,
+      data?.[this.config.columnName],
+    );
 
     if (data && data[this.config.columnName]) {
       this.logger("applying update to yjs");
       try {
-        this.applyUpdate(Uint8Array.from(data[this.config.columnName]));
+        // Convert int4[] PostgreSQL array to Uint8Array
+        const contentArray = data[this.config.columnName];
+        const uint8Array = int4ToUint8Array(contentArray);
+
+        this.applyUpdate(uint8Array);
       } catch (error) {
-        this.logger(error);
+        console.error("Error decoding or applying update:", error);
+        this.logger("Error data type:", typeof data[this.config.columnName]);
+        this.logger("Error data:", data[this.config.columnName]);
       }
     }
 
@@ -170,7 +184,7 @@ export default class SupabaseProvider extends EventEmitter {
           { event: "message" },
           ({ payload }) => {
             if (payload && Array.isArray(payload) && payload.length > 0) {
-              this.onMessage(Uint8Array.from(payload), this);
+              this.onMessage(int4ToUint8Array(payload), this);
             } else {
               console.warn(
                 "SupabaseProvider: received empty broadcast message",
@@ -183,7 +197,7 @@ export default class SupabaseProvider extends EventEmitter {
           { event: "awareness" },
           ({ payload }) => {
             if (payload && Array.isArray(payload) && payload.length > 0) {
-              this.onAwareness(Uint8Array.from(payload));
+              this.onAwareness(int4ToUint8Array(payload));
             }
           },
         )
@@ -208,6 +222,25 @@ export default class SupabaseProvider extends EventEmitter {
             this.emit("disconnect", this);
           }
         });
+    }
+  }
+
+  private sendMessageBatch() {
+    if (this.channel && this.messageQueue.length > 0) {
+      try {
+        const mergedUpdate = Y.mergeUpdates(this.messageQueue);
+        const payload = Array.from(mergedUpdate);
+        this.channel.send({
+          type: "broadcast",
+          event: "message",
+          payload,
+        });
+        this.messageQueue = [];
+        this.logger("Batch sent successfully");
+      } catch (error) {
+        console.error("Error merging updates for batch:", error);
+        this.logger("Error merging updates for batch", error);
+      }
     }
   }
 
@@ -257,6 +290,22 @@ export default class SupabaseProvider extends EventEmitter {
       }, this.config.resyncInterval || 5000);
     }
 
+    if (
+      this.config.batchInterval ||
+      typeof this.config.batchInterval === "undefined"
+    ) {
+      if (this.config.batchInterval && this.config.batchInterval < 1000) {
+        throw new Error("batch interval of less than 1 second");
+      }
+      this.logger(
+        `setting batch interval to every ${(this.config.batchInterval || 500) / 1000} seconds`,
+      );
+      this.batchTimeout = setInterval(() => {
+        this.logger("sending message batch (batch interval elapsed)");
+        this.sendMessageBatch();
+      }, this.config.batchInterval || 500);
+    }
+
     if (typeof window !== "undefined") {
       window.addEventListener(
         "beforeunload",
@@ -275,14 +324,11 @@ export default class SupabaseProvider extends EventEmitter {
     });
     this.on("message", (update) => {
       if (this.channel) {
-        const payload = Array.from(update);
-        this.channel.send({
-          type: "broadcast",
-          event: "message",
-          payload: payload,
-        });
+        this.messageQueue.push(update);
       } else {
-        console.error("SupabaseProvider: Cannot send message, channel is null");
+        console.error(
+          "SupabaseProvider: Cannot queue message, channel is null",
+        );
       }
     });
 
@@ -359,6 +405,10 @@ export default class SupabaseProvider extends EventEmitter {
 
     if (this.resyncInterval) {
       clearInterval(this.resyncInterval);
+    }
+
+    if (this.batchTimeout) {
+      clearInterval(this.batchTimeout);
     }
 
     if (typeof window !== "undefined") {

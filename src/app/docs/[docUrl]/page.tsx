@@ -2,24 +2,17 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { redirect, useParams } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Columns2,
-  Eye,
-  Pencil,
-  Users,
-  ChevronLeft,
-  Link as LinkIcon,
-  LoaderCircle,
-} from "lucide-react";
 import Markdown from "@/features/markdown";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { copyToClipboard } from "@/lib/utils";
 import Background from "@/components/ui/background";
 import { ViewMode } from "@/types/global";
 import { Document } from "@/types/document";
 import { getDoc } from "@/features/documents/actions";
+import ViewSelector from "@/components/view-selector";
+import { Spinner } from "@/components/ui/spinner";
+import { ChevronLeft, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DocPage() {
   const { docUrl } = useParams() as { docUrl: string };
@@ -28,7 +21,6 @@ export default function DocPage() {
   const [error, setError] = useState<Error | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.BOTH);
-  const [connectedUsers, setConnectedUsers] = useState<number>(1);
 
   const fetchDocData = useCallback(async () => {
     try {
@@ -52,10 +44,7 @@ export default function DocPage() {
       <main className="p-8 min-h-screen flex flex-col">
         <Background />
         <div className="flex justify-center items-center flex-grow">
-          <LoaderCircle
-            className="h-8 w-8 animate-spin text-muted-foreground"
-            aria-hidden
-          />
+          <Spinner />
         </div>
       </main>
     );
@@ -77,52 +66,25 @@ export default function DocPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() =>
-              copyToClipboard(
-                `${window.location.origin}/docs/${docUrl}`,
-                "Document link copied to clipboard",
-              )
-            }
+            onClick={() => {
+              navigator.clipboard
+                .writeText(`${window.location.origin}/docs/${docUrl}`)
+                .then(() => {
+                  toast.success("Document link copied to clipboard");
+                })
+                .catch((err) => {
+                  console.error("Failed to copy: ", err);
+                });
+            }}
           >
             <LinkIcon className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" className="px-2" disabled aria-hidden>
-              <span className="text-sm">{connectedUsers}</span>
-              <Users className="h-6" />
-            </Button>
-          </div>
-          <Tabs
-            defaultValue={viewMode}
-            onValueChange={(value: string) => setViewMode(value as ViewMode)}
-          >
-            <TabsList>
-              <TabsTrigger value={ViewMode.BOTH}>
-                <Columns2 />
-                Both
-              </TabsTrigger>
-              <TabsTrigger value={ViewMode.EDIT}>
-                <Pencil />
-                Edit
-              </TabsTrigger>
-              <TabsTrigger value={ViewMode.VIEW}>
-                <Eye />
-                View
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <ViewSelector viewMode={viewMode} setViewMode={setViewMode} />
         </div>
       </div>
-      {doc && (
-        <Markdown
-          defaultValue={doc.content ?? ""}
-          docUrl={docUrl}
-          viewMode={viewMode}
-          setConnectedUsers={setConnectedUsers}
-        />
-      )}
+      {doc && <Markdown docUrl={docUrl} viewMode={viewMode} />}
     </main>
   );
 }

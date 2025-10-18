@@ -29,9 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased *:selection:bg-primary min-h-screen`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system">
-          <Toaster />
+        <ThemeProvider defaultTheme="system" attribute="class">
           {children}
+          <Toaster theme={"system"} richColors position="top-center" />
         </ThemeProvider>
       </body>
     </html>

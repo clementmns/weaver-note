@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { createDoc } from "./actions";
-import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function DocumentCreateForm() {
@@ -49,7 +49,7 @@ export function DocumentCreateForm() {
         >
           {loading ? (
             <>
-              <LoaderCircle className="animate-spin" />
+              <Spinner />
               Creating...
             </>
           ) : (

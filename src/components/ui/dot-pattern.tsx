@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
 import React, { useEffect, useId, useRef, useState } from "react";
 
 /**
@@ -92,7 +91,7 @@ export function DotPattern({
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  const { staticDots, animatedDots } = React.useMemo(() => {
+  const { staticDots } = React.useMemo(() => {
     const totalCols = Math.ceil(dimensions.width / width);
     const totalRows = Math.ceil(dimensions.height / height);
     const totalDots = totalCols * totalRows;
@@ -175,29 +174,6 @@ export function DotPattern({
           r={cr}
           fill="currentColor"
           className="text-neutral-400/60"
-        />
-      ))}
-
-      {animatedDots.map((dot) => (
-        <motion.circle
-          key={dot.key}
-          cx={dot.x}
-          cy={dot.y}
-          r={cr}
-          fill={`url(#${id}-gradient)`}
-          className="text-neutral-400/60"
-          initial={{ opacity: 0.2, scale: 1 }}
-          animate={{
-            opacity: [0.2, 0.6, 0.2],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: dot.duration,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: dot.delay,
-            ease: "easeInOut",
-          }}
         />
       ))}
     </svg>
