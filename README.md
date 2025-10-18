@@ -6,8 +6,6 @@ WeaveNote is a collaborative markdown platform designed for teams and individual
 
 - **Real-time Collaboration:** Work together on markdown documents with instant updates.
 - **Rich Markdown Support:** Write notes with headings, lists, code blocks, tables, and more.
-- **Version History:** Track changes and revert to previous versions.
-- **Access Control:** Manage permissions for viewing and editing notes.
 - **Cross-Platform:** Accessible from any device with a modern browser.
 
 ## Getting Started
@@ -33,5 +31,3 @@ pnpm dev
 
 4. **Open your browser:**
    Visit `http://localhost:3000` to start collaborating.
-
-Made with ❤️ by the WeaveNote team.
