@@ -8,7 +8,6 @@ import { ViewMode } from "@/types/global";
 interface MarkdownProps {
   docUrl: string;
   viewMode: ViewMode;
-  setUserCount: (count: number) => void;
 }
 
 export default function Markdown({ viewMode, docUrl }: MarkdownProps) {

@@ -11,8 +11,7 @@ import { Document } from "@/types/document";
 import { getDoc } from "@/features/documents/actions";
 import ViewSelector from "@/components/view-selector";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Link as LinkIcon, Users } from "lucide-react";
+import { ChevronLeft, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DocPage() {
@@ -22,7 +21,6 @@ export default function DocPage() {
   const [error, setError] = useState<Error | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.BOTH);
-  const [userCount, setUserCount] = useState<number>(1);
 
   const fetchDocData = useCallback(async () => {
     try {
@@ -83,13 +81,13 @@ export default function DocPage() {
           </Button>
         </div>
         <div className="flex items-center gap-4">
-          <Badge variant="secondary">
+          {/* <Badge variant="secondary">
             <Users />
             {userCount}{" "}
             <span className="sm:block hidden">
               User{userCount > 1 ? "s" : ""}
             </span>
-          </Badge>
+          </Badge> */}
           <ViewSelector viewMode={viewMode} setViewMode={setViewMode} />
         </div>
       </div>
@@ -97,7 +95,6 @@ export default function DocPage() {
         <Markdown
           docUrl={docUrl}
           viewMode={viewMode}
-          setUserCount={setUserCount}
         />
       )}
     </main>
